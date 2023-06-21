@@ -18,11 +18,15 @@
   </time>
   <span class="round">{match.round}</span>
   <span class="team team1">
-    <span class="fi fi-{flagClasses[match.team1]}"></span>
+    {#if flagClasses[match.team1]}
+      <span class="fi fi-{flagClasses[match.team1]}"></span>
+    {/if}
     {match.team1}
   </span>
   <span class="team team2">
-    <span class="fi fi-{flagClasses[match.team2]}"></span>
+    {#if flagClasses[match.team2]}
+      <span class="fi fi-{flagClasses[match.team2]}"></span>
+    {/if}
     {match.team2}
   </span>
 </div>

@@ -31,4 +31,5 @@ body.debug {
 #app {
   margin: 0 auto;
   padding: 2rem;
+  padding-top: 4rem;
 }
