@@ -30,15 +30,20 @@
     });
 
   // Testing only!
-  const localOffset = matches[0].date.getTimezoneOffset() / 60 * -1
+  const localOffset = matches[0].date.getTimezoneOffset() / 60 * -1;
   let debugZone = localOffset;
+
+  // NOTE: "Hour" in names now indicates half-hour blocks, so 12:30 becomes "hour 25"
+  function getMatchHour(date) {
+    return date.getHours() * 2 + (date.getMinutes() ? 1 : 0);
+  }
 
   let days, cols, colOffset, colOffsetStart;
   // Calculate which local days and columns to show.
   // This needs to be reusable for the debug time zone switcher.
   $: {
     days = [];
-    cols = 24;
+    cols = 48; // Use half-hour blocks
     colOffset = 0;
     colOffsetStart = 0;
     let curDay = { hasDoubles: false, matches: [] };
@@ -57,36 +62,51 @@
       if (match.isDoubleTime) {
         curDay.hasDoubles = true;
       }
-      if (match.date.getHours() > latestLocalHour) {
-        latestLocalHour = match.date.getHours();
+      const matchHour = getMatchHour(match.date)
+      if (matchHour > latestLocalHour) {
+        latestLocalHour = matchHour;
       }
     }
     days.push(curDay);
 
     // This relies on the exact schedule, knowing the matches that are earliest/latest in the Qatar day
-    const earliestMatchHour = matches[4].date.getHours(); // ARG-KSA
-    const latestMatchHour = matches[7].date.getHours(); // FRA-AUS
+    const earliestMatchHour = getMatchHour(matches[24].date); // ARG-RSA
+    const latestMatchHour = getMatchHour(matches[29].date); // PAN-JAM
+    const matchesSpanCols = latestMatchHour + 4 - earliestMatchHour;
     const shouldShrinkMiddle = latestMatchHour < earliestMatchHour;
     if (shouldShrinkMiddle) {
+      /**
+       * THIS IS BROKEN!
+       */
       // Some matches are on a different day from Qatar, leaving a huge gap between certain matches.
       // Work out where this large gap is and shrink it, while leaving 1-2 hour gaps alone.
-      const shrinkStart = latestMatchHour + 4;
-      const shrinkEnd = earliestMatchHour - 2;
+      const shrinkStart = latestMatchHour + 8;
+      const shrinkEnd = earliestMatchHour - 4;
       colOffset = shrinkEnd - shrinkStart;
       colOffsetStart = shrinkStart;
       cols -= colOffset;
-      // Add an extra column to give space for matches starting at 11pm
-      if (latestLocalHour === 23) {
-        cols += 1;
+      // Add an extra column to give space for matches starting at or after 10:30pm
+      if (latestLocalHour >= 45) {
+        cols += 2;
       }
+      console.log({ cols, colOffset, colOffsetStart, shrinkStart, shrinkEnd, shouldShrinkMiddle });
     } else {
+      /**
+       * THIS DOESN'T WORK PROPERLY WHEN FIRST MATCH IS AT MIDNIGHT
+       */
       // All matches are on the same day as Qatar; remove columns before/after blocks of matches
       // (but leave some padding in some cases?)
-      colOffset = Math.max(earliestMatchHour - 1, 0);
-      const endPadding = latestMatchHour < 22 ? 1 : 0;
-      cols = cols - colOffset - (24 - latestMatchHour - 2 - endPadding);
+      const startPadding = earliestMatchHour >= 1 ? 1 : 0;
+      colOffset = Math.max(earliestMatchHour - 2, 0) - startPadding;
+      const endPadding = latestMatchHour < 44 ? 1 : 0;
+      // const endOffset = 0; //(24 - latestMatchHour - 4 - endPadding);
+      // cols = cols - colOffset - endOffset;
+      cols = startPadding + matchesSpanCols + endPadding;
+      console.log(shouldShrinkMiddle, {
+        earliestMatchHour, latestMatchHour, latestLocalHour, matchesSpanCols,
+        cols, colOffset, colOffsetStart, startPadding, endPadding,
+      });
     }
-    console.log({ cols, colOffset, colOffsetStart, shouldShrinkMiddle });
   }
 
   const dateFormatter = new Intl.DateTimeFormat('en', {
@@ -120,7 +140,7 @@
         </span>
         {#each day.matches as match}
           <!-- <Match match={match} latestMatchHour={shrinkMiddle ? latestMatchHour : 0} /> -->
-          <Match match={match} colOffset={match.date.getHours() >= colOffsetStart ? colOffset : 0} />
+          <Match match={match} colOffset={getMatchHour(match.date) >= colOffsetStart ? colOffset : 0} />
         {/each}
       </div>
     {/each}
@@ -131,6 +151,7 @@
   .container {
     border: 2px solid black;
     display: grid;
+    column-gap: 1px;
   }
   .row {
     display: grid;

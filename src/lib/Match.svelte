@@ -7,12 +7,15 @@
   let col = 0;
   $: {
     const hour = match.date?.getHours() || 0;
-    col = hour + 2 - colOffset;
+    col = hour * 2 - colOffset;
+    if (match.date?.getMinutes()) {
+      col++;
+    }
   }
 </script>
 
 <div class="match" style="
-  grid-column: {col} / {col + 2};
+  grid-column: {col} / {col + 4};
   grid-row: {match.isDoubleTime ? 2 : 1};
 ">
   <span class="num"><span>Match {match.matchNum}</span></span>
