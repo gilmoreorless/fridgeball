@@ -22,6 +22,7 @@
         matchNum: +matchNum,
         round,
         date,
+        baseDate: date,
         team1,
         team2,
         isDoubleTime,
@@ -29,53 +30,64 @@
     });
 
   // Testing only!
-  // for (const match of matches) {
-  //   match.date.setHours(match.date.getHours() - 3);
-  // }
+  const localOffset = matches[0].date.getTimezoneOffset() / 60 * -1
+  let debugZone = localOffset;
 
-  const days = [];
-  let curDay = { hasDoubles: false, matches: [] };
-  let latestLocalHour = 0;
-  for (let match of matches) {
-    if (curDay.matches.length && match.date.getDate() !== curDay.matches[0].date.getDate()) {
-      days.push(curDay);
-      curDay = { hasDoubles: false, matches: [] };
-    }
-    curDay.matches.push(match);
-    if (match.isDoubleTime) {
-      curDay.hasDoubles = true;
-    }
-    if (match.date.getHours() > latestLocalHour) {
-      latestLocalHour = match.date.getHours();
-    }
-  }
-  days.push(curDay);
+  let days, cols, colOffset, colOffsetStart;
+  // Calculate which local days and columns to show.
+  // This needs to be reusable for the debug time zone switcher.
+  $: {
+    days = [];
+    cols = 24;
+    colOffset = 0;
+    colOffsetStart = 0;
+    let curDay = { hasDoubles: false, matches: [] };
+    let latestLocalHour = 0;
+    for (let match of matches) {
+      // Account for debug time zone offset
+      match.date = new Date(match.baseDate);
+      match.date.setHours(match.date.getHours() - (localOffset - debugZone));
 
-  let cols = 24;
-  let colOffset = 0;
-  let colOffsetStart = 0;
-  // This relies on the exact schedule, knowing the matches that are earliest/latest in the Qatar day
-  const earliestMatchHour = matches[4].date.getHours(); // ARG-KSA
-  const latestMatchHour = matches[7].date.getHours(); // FRA-AUS
-  const shouldShrinkMiddle = latestMatchHour < earliestMatchHour;
-  if (shouldShrinkMiddle) {
-    // Some matches are on a different day from Qatar, leaving a huge gap between certain matches.
-    // Work out where this large gap is and shrink it, while leaving 1-2 hour gaps alone.
-    const shrinkStart = latestMatchHour + 4;
-    const shrinkEnd = earliestMatchHour - 2;
-    colOffset = shrinkEnd - shrinkStart;
-    colOffsetStart = shrinkStart;
-    cols -= colOffset;
-    // Add an extra column to give space for matches starting at 11pm
-    if (latestLocalHour === 23) {
-      cols += 1;
+      // Work out which local time days are used
+      if (curDay.matches.length && match.date.getDate() !== curDay.matches[0].date.getDate()) {
+        days.push(curDay);
+        curDay = { hasDoubles: false, matches: [] };
+      }
+      curDay.matches.push(match);
+      if (match.isDoubleTime) {
+        curDay.hasDoubles = true;
+      }
+      if (match.date.getHours() > latestLocalHour) {
+        latestLocalHour = match.date.getHours();
+      }
     }
-  } else {
-    // All matches are on the same day as Qatar; remove columns before/after blocks of matches.
-    colOffset = earliestMatchHour;
-    cols = cols - colOffset - (24 - latestMatchHour - 2);
+    days.push(curDay);
+
+    // This relies on the exact schedule, knowing the matches that are earliest/latest in the Qatar day
+    const earliestMatchHour = matches[4].date.getHours(); // ARG-KSA
+    const latestMatchHour = matches[7].date.getHours(); // FRA-AUS
+    const shouldShrinkMiddle = latestMatchHour < earliestMatchHour;
+    if (shouldShrinkMiddle) {
+      // Some matches are on a different day from Qatar, leaving a huge gap between certain matches.
+      // Work out where this large gap is and shrink it, while leaving 1-2 hour gaps alone.
+      const shrinkStart = latestMatchHour + 4;
+      const shrinkEnd = earliestMatchHour - 2;
+      colOffset = shrinkEnd - shrinkStart;
+      colOffsetStart = shrinkStart;
+      cols -= colOffset;
+      // Add an extra column to give space for matches starting at 11pm
+      if (latestLocalHour === 23) {
+        cols += 1;
+      }
+    } else {
+      // All matches are on the same day as Qatar; remove columns before/after blocks of matches
+      // (but leave some padding in some cases?)
+      colOffset = Math.max(earliestMatchHour - 1, 0);
+      const endPadding = latestMatchHour < 22 ? 1 : 0;
+      cols = cols - colOffset - (24 - latestMatchHour - 2 - endPadding);
+    }
+    console.log({ cols, colOffset, colOffsetStart, shouldShrinkMiddle });
   }
-  console.log({ cols, colOffset, colOffsetStart, shouldShrinkMiddle });
 
   const dateFormatter = new Intl.DateTimeFormat('en', {
     month: 'short',
@@ -95,6 +107,10 @@
 </script>
 
 <main>
+  <div class="debug-controls">
+    <label for="debug-time-zone"><strong>[DEBUG]</strong> Time zone offset (hours):</label>
+    <input type="number" id="debug-time-zone" bind:value={debugZone} min="-14" max="14">
+  </div>
   <div class="container" style="grid-template-columns: 5em repeat({cols}, 1fr);">
     {#each days as day}
       <div class="row">
@@ -129,5 +145,29 @@
     padding: 0.5em;
     display: flex;
     align-items: center;
+  }
+
+  .debug-controls {
+    display: none;
+  }
+  :global(body.debug) .debug-controls {
+    --debug-colour: lightcoral;
+
+    display: block;
+    position: fixed;
+    left: 22cm;
+
+    font-size: 1.5em;
+    background-color: color-mix(in srgb, var(--debug-colour), white 70%);
+    border: 2px dashed color-mix(in srgb, var(--debug-colour), black 10%);
+    padding: 1em;
+  }
+  .debug-controls strong {
+    display: block;
+  }
+  .debug-controls input {
+    font-size: inherit;
+    display: block;
+    width: 5em;
   }
 </style>

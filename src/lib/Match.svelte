@@ -4,8 +4,11 @@
   export let match = {};
   export let colOffset = 0;
 
-  const hour = match.date?.getHours() || 0;
-  const col = hour + 2 - colOffset;
+  let col = 0;
+  $: {
+    const hour = match.date?.getHours() || 0;
+    col = hour + 2 - colOffset;
+  }
 </script>
 
 <div class="match" style="
