@@ -11,6 +11,9 @@
     if (match.date?.getMinutes()) {
       col++;
     }
+    // +1 to account for the first column being the date
+    // +1 to account for grid columns being 1-indexed
+    col += 2;
   }
 </script>
 
@@ -49,7 +52,7 @@
     outline: 1px solid black;
     background-color: hsl(120, 100%, 95%);
     font-size: 1em;
-    padding: 0.5em;
+    padding: 0.2em 0.5em 0.3em;
   }
   .match[data-location="NZL"] {
     background-color: hsl(0, 0%, 95%);
@@ -61,7 +64,7 @@
     background-color: hsl(210, 80%, 95%);
   }
   .num {
-    grid-row: span 3;
+    grid-area: num;
     white-space: nowrap;
     position: relative;
   }
