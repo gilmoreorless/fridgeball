@@ -27,7 +27,7 @@ export const flagClasses = {
   MAR: 'ma',
   MEX: 'mx',
   NED: 'nl',
-  NIG: 'ng',
+  NGA: 'ng',
   NOR: 'no',
   NZL: 'nz',
   PAN: 'pa',

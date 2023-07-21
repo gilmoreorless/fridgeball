@@ -14,6 +14,7 @@
         dateTime,
         team1,
         team2,
+        location,
       ] = line.split('\t');
       const isDoubleTime = matchDateTimes.has(dateTime);
       matchDateTimes.add(dateTime);
@@ -26,6 +27,7 @@
         team1,
         team2,
         isDoubleTime,
+        location,
       };
     });
 

@@ -14,7 +14,7 @@
   }
 </script>
 
-<div class="match" style="
+<div class="match" data-location={match.location} style="
   grid-column: {col} / {col + 4};
   grid-row: {match.isDoubleTime ? 2 : 1};
 ">
@@ -47,9 +47,18 @@
     grid-template-columns: 1em 1fr 1fr;
 
     outline: 1px solid black;
-    background-color: hsl(210, 100%, 95%);
+    background-color: hsl(120, 100%, 95%);
     font-size: 1em;
     padding: 0.5em;
+  }
+  .match[data-location="NZL"] {
+    background-color: hsl(0, 0%, 95%);
+  }
+  .match[data-location="AUW"] {
+    background-color: hsl(0, 80%, 95%);
+  }
+  .match[data-location="AUC"] {
+    background-color: hsl(210, 80%, 95%);
   }
   .num {
     grid-row: span 3;
