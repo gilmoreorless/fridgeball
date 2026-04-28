@@ -2,5 +2,3 @@ minimumReleaseAge: 4320 # 3 days
 trustPolicy: no-downgrade
 
 strictDepBuilds: true
-allowBuilds:
-  esbuild: true
