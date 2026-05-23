@@ -1,4 +1,4 @@
-export const flagClasses = {
+export const flagClasses: Record<string, string> = {
   ARG: 'ar',
   AUS: 'au',
   BEL: 'be',
@@ -46,4 +46,4 @@ export const flagClasses = {
   VNM: 'vn',
   WAL: 'gb-wls',
   ZMB: 'zm',
-}
+};

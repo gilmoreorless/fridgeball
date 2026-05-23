@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
   import '/node_modules/flag-icons/css/flag-icons.min.css';
   import rawData from './assets/schedule.tsv?raw';
-  import Match from './lib/Match.svelte';
+  import Match, { type MatchData } from './lib/Match.svelte';
 
-  const matchDateTimes = new Set();
-  const matches = rawData
+  const matchDateTimes = new Set<string>();
+  const matches: MatchData[] = rawData
     .split('\n')
     .filter(line => line.length > 1)
     .map(line => {
@@ -36,7 +36,7 @@
   let debugZone = $state(localOffset);
 
   // NOTE: "Hour" in names now indicates half-hour blocks, so 12:30 becomes "hour 25"
-  function getMatchHour(date, utc = false) {
+  function getMatchHour(date: Date, utc = false) {
     const hours = utc ? date.getUTCHours() : date.getHours();
     const mins = utc ? date.getUTCMinutes() : date.getMinutes();
     return hours * 2 + (mins ? 1 : 0);
@@ -49,7 +49,7 @@
     let cols = 48; // Use half-hour blocks
     let colOffset = 0;
     let colOffsetStart = 0;
-    let curDay = { hasDoubles: false, matches: [] };
+    let curDay = { hasDoubles: false, matches: <MatchData[]>[] };
     // let earliestMatch = [cols, null];
     // let latestMatch = [0, null];
     let latestLocalHour = 0;
@@ -127,7 +127,7 @@
     weekday: 'short',
   });
 
-  function displayDate(date) {
+  function displayDate(date: Date) {
     const parts = dateFormatter.formatToParts(date);
     for (const part of parts) {
       if (part.type === 'literal' && part.value === ', ') {

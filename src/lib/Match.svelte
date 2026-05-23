@@ -1,14 +1,23 @@
-<script>
+<script lang="ts">
   import { flagClasses } from './flagClasses';
 
-  /**
-   * @typedef {Object} Props
-   * @property {any} [match]
-   * @property {number} [colOffset]
-   */
+  export interface MatchData {
+    matchNum: number;
+    round: string;
+    date: Date;
+    baseDate: Date;
+    team1: string;
+    team2: string;
+    isDoubleTime: boolean;
+    location: string;
+  }
 
-  /** @type {Props} */
-  let { match = {}, colOffset = 0 } = $props();
+  interface Props {
+    match: MatchData;
+    colOffset?: number;
+  }
+
+  let { match, colOffset = 0 }: Props = $props();
 
   let col = $derived.by(() => {
     const hour = match.date?.getHours() || 0;
