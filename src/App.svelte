@@ -1,4 +1,6 @@
 <script>
+  import { run } from 'svelte/legacy';
+
   import '/node_modules/flag-icons/css/flag-icons.min.css';
   import rawData from './assets/schedule.tsv?raw';
   import Match from './lib/Match.svelte';
@@ -33,7 +35,7 @@
 
   // Testing only!
   const localOffset = matches[0].date.getTimezoneOffset() / 60 * -1;
-  let debugZone = localOffset;
+  let debugZone = $state(localOffset);
 
   // NOTE: "Hour" in names now indicates half-hour blocks, so 12:30 becomes "hour 25"
   function getMatchHour(date, utc = false) {
@@ -42,10 +44,10 @@
     return hours * 2 + (mins ? 1 : 0);
   }
 
-  let days, cols, colOffset, colOffsetStart;
+  let days = $state(), cols = $state(), colOffset = $state(), colOffsetStart = $state();
   // Calculate which local days and columns to show.
   // This needs to be reusable for the debug time zone switcher.
-  $: {
+  run(() => {
     days = [];
     cols = 48; // Use half-hour blocks
     colOffset = 0;
@@ -118,7 +120,7 @@
         cols, colOffset, colOffsetStart, startPadding, endPadding,
       });
     }
-  }
+  });
 
   const dateFormatter = new Intl.DateTimeFormat('en', {
     month: 'short',

@@ -1,11 +1,19 @@
 <script>
+  import { run } from 'svelte/legacy';
+
   import { flagClasses } from './flagClasses';
 
-  export let match = {};
-  export let colOffset = 0;
+  /**
+   * @typedef {Object} Props
+   * @property {any} [match]
+   * @property {number} [colOffset]
+   */
 
-  let col = 0;
-  $: {
+  /** @type {Props} */
+  let { match = {}, colOffset = 0 } = $props();
+
+  let col = $state(0);
+  run(() => {
     const hour = match.date?.getHours() || 0;
     col = hour * 2 - colOffset;
     if (match.date?.getMinutes()) {
@@ -14,7 +22,7 @@
     // +1 to account for the first column being the date
     // +1 to account for grid columns being 1-indexed
     col += 2;
-  }
+  });
 </script>
 
 <div class="match" data-location={match.location} style="
