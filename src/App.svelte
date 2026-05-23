@@ -1,6 +1,4 @@
 <script>
-  import { run } from 'svelte/legacy';
-
   import '/node_modules/flag-icons/css/flag-icons.min.css';
   import rawData from './assets/schedule.tsv?raw';
   import Match from './lib/Match.svelte';
@@ -44,14 +42,13 @@
     return hours * 2 + (mins ? 1 : 0);
   }
 
-  let days = $state(), cols = $state(), colOffset = $state(), colOffsetStart = $state();
   // Calculate which local days and columns to show.
   // This needs to be reusable for the debug time zone switcher.
-  run(() => {
-    days = [];
-    cols = 48; // Use half-hour blocks
-    colOffset = 0;
-    colOffsetStart = 0;
+  let { days, cols, colOffset, colOffsetStart } = $derived.by(() => {
+    let days = [];
+    let cols = 48; // Use half-hour blocks
+    let colOffset = 0;
+    let colOffsetStart = 0;
     let curDay = { hasDoubles: false, matches: [] };
     // let earliestMatch = [cols, null];
     // let latestMatch = [0, null];
@@ -66,7 +63,8 @@
         days.push(curDay);
         curDay = { hasDoubles: false, matches: [] };
       }
-      curDay.matches.push(match);
+      // Clone the match object to ensure <Match> components re-render correctly
+      curDay.matches.push({ ...match });
       if (match.isDoubleTime) {
         curDay.hasDoubles = true;
       }
@@ -120,6 +118,7 @@
         cols, colOffset, colOffsetStart, startPadding, endPadding,
       });
     }
+    return { days, cols, colOffset, colOffsetStart };
   });
 
   const dateFormatter = new Intl.DateTimeFormat('en', {

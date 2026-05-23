@@ -1,6 +1,4 @@
 <script>
-  import { run } from 'svelte/legacy';
-
   import { flagClasses } from './flagClasses';
 
   /**
@@ -12,16 +10,16 @@
   /** @type {Props} */
   let { match = {}, colOffset = 0 } = $props();
 
-  let col = $state(0);
-  run(() => {
+  let col = $derived.by(() => {
     const hour = match.date?.getHours() || 0;
-    col = hour * 2 - colOffset;
+    let value = hour * 2 - colOffset;
     if (match.date?.getMinutes()) {
-      col++;
+      value++;
     }
     // +1 to account for the first column being the date
     // +1 to account for grid columns being 1-indexed
-    col += 2;
+    value += 2;
+    return value;
   });
 </script>
 
