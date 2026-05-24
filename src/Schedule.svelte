@@ -24,8 +24,8 @@
     let colOffset = 0;
     let colOffsetStart = 0;
     let curDay = { hasDoubles: false, matches: <MatchData[]>[] };
-    // let earliestMatch = [cols, null];
-    // let latestMatch = [0, null];
+    let earliestMatch: [number, Date] = [cols, null];
+    let latestMatch: [number, Date] = [0, null];
     let latestLocalHour = 0;
     for (let match of matches) {
       // Account for debug time zone offset
@@ -46,21 +46,22 @@
       if (matchHour > latestLocalHour) {
         latestLocalHour = matchHour;
       }
-      // const utcMatchHour = getMatchHour(match.date, true);
-      // if (utcMatchHour > latestMatch[0]) {
-      //   latestMatch = [utcMatchHour, match.date];
-      // }
-      // if (utcMatchHour < earliestMatch[0]) {
-      //   earliestMatch = [utcMatchHour, match.date];
-      // }
+      const utcMatchHour = getMatchHour(match.date, true);
+      if (utcMatchHour > latestMatch[0]) {
+        latestMatch = [utcMatchHour, match.date];
+      }
+      if (utcMatchHour < earliestMatch[0]) {
+        earliestMatch = [utcMatchHour, match.date];
+      }
     }
     days.push(curDay);
 
-    // This relies on the exact schedule, knowing the matches that are earliest/latest in the Qatar day
-    const earliestMatchHour = getMatchHour(matches[24].date); // ARG-RSA
-    const latestMatchHour = getMatchHour(matches[29].date); // PAN-JAM
-    // const earliestMatchHour = getMatchHour(earliestMatch[1]);
-    // const latestMatchHour = getMatchHour(latestMatch[1]);
+    // Try to work out the earliest/latest start times to aid in removing unnecessary columns
+    // NOTE: This only works for the user's time zone, but breaks when using the debug UI
+    // TODO: Convert to Temporal?
+    const earliestMatchHour = getMatchHour(earliestMatch[1]);
+    const latestMatchHour = getMatchHour(latestMatch[1]);
+
     const matchesSpanCols = latestMatchHour + 4 - earliestMatchHour;
     const shouldShrinkMiddle = latestMatchHour < earliestMatchHour;
     if (shouldShrinkMiddle) {
@@ -81,7 +82,7 @@
       }
       console.log(shouldShrinkMiddle, { cols, colOffset, colOffsetStart, shrinkStart, shrinkEnd });
     } else {
-      // All matches are on the same day as Qatar; remove columns before/after blocks of matches
+      // All matches are on the same day as the host; remove columns before/after blocks of matches
       // (but leave some padding in some cases?)
       const startPadding = earliestMatchHour >= 1 ? 1 : 0;
       colOffset = Math.max(earliestMatchHour - 2, 0) + startPadding;
