@@ -1,6 +1,6 @@
 <script lang="ts">
-  import '/node_modules/flag-icons/css/flag-icons.min.css';
-  import rawData from './assets/schedule.tsv?raw';
+  import '../node_modules/flag-icons/css/flag-icons.min.css';
+  import rawData from './assets/2023-WWC.tsv?raw';
   import Match, { type MatchData } from './lib/Match.svelte';
 
   const matchDateTimes = new Set<string>();
