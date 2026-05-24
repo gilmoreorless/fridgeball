@@ -32,6 +32,13 @@
   });
 </script>
 
+{#snippet team(name: string)}
+  {#if flagClasses[name]}
+    <span class="fi fi-{flagClasses[name]}"></span>
+  {/if}
+  {name}
+{/snippet}
+
 <div class="match" data-location={match.location} style="
   grid-column: {col} / {col + 4};
   grid-row: {match.isDoubleTime ? 2 : 1};
@@ -42,16 +49,10 @@
   </time>
   <span class="round">{match.round}</span>
   <span class="team team1">
-    {#if flagClasses[match.team1]}
-      <span class="fi fi-{flagClasses[match.team1]}"></span>
-    {/if}
-    {match.team1}
+    {@render team(match.team1)}
   </span>
   <span class="team team2">
-    {#if flagClasses[match.team2]}
-      <span class="fi fi-{flagClasses[match.team2]}"></span>
-    {/if}
-    {match.team2}
+    {@render team(match.team2)}
   </span>
 </div>
 

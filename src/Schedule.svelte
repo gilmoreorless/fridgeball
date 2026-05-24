@@ -1,39 +1,13 @@
 <script lang="ts">
-  import '../node_modules/flag-icons/css/flag-icons.min.css';
-  import rawData from './assets/2023-WWC.tsv?raw';
   import Match, { type MatchData } from './lib/Match.svelte';
 
-  const matchDateTimes = new Set<string>();
-  const matches: MatchData[] = rawData
-    .split('\n')
-    .filter(line => line.length > 1)
-    .map(line => {
-      const [
-        matchNum,
-        round,
-        dateTime,
-        team1,
-        team2,
-        location,
-      ] = line.split('\t');
-      const isDoubleTime = matchDateTimes.has(dateTime);
-      matchDateTimes.add(dateTime);
-      const date = new Date(dateTime);
-      return {
-        matchNum: +matchNum,
-        round,
-        date,
-        baseDate: date,
-        team1,
-        team2,
-        isDoubleTime,
-        location,
-      };
-    });
+  interface Props {
+    matches: MatchData[];
+    debugZone?: number;
+  }
 
-  // Testing only!
-  const localOffset = matches[0].date.getTimezoneOffset() / 60 * -1;
-  let debugZone = $state(localOffset);
+  const localOffset = new Date().getTimezoneOffset() / 60 * -1;
+  let { matches, debugZone = localOffset }: Props = $props();
 
   // NOTE: "Hour" in names now indicates half-hour blocks, so 12:30 becomes "hour 25"
   function getMatchHour(date: Date, utc = false) {
@@ -138,24 +112,18 @@
   }
 </script>
 
-<main>
-  <div class="debug-controls">
-    <label for="debug-time-zone"><strong>[DEBUG]</strong> Time zone UTC offset (hours):</label>
-    <input type="number" id="debug-time-zone" bind:value={debugZone} min="-14" max="14">
-  </div>
-  <div class="container" style="grid-template-columns: 5em repeat({cols}, 1fr);">
-    {#each days as day}
-      <div class="row">
-        <span class="date" style="grid-row: span {day.hasDoubles ? 2 : 1}">
-          {@html displayDate(day.matches[0].date)}
-        </span>
-        {#each day.matches as match}
-          <Match match={match} colOffset={getMatchHour(match.date) >= colOffsetStart ? colOffset : 0} />
-        {/each}
-      </div>
-    {/each}
-  </div>
-</main>
+<div class="container" style="grid-template-columns: 5em repeat({cols}, 1fr);">
+  {#each days as day}
+    <div class="row">
+      <span class="date" style="grid-row: span {day.hasDoubles ? 2 : 1}">
+        {@html displayDate(day.matches[0].date)}
+      </span>
+      {#each day.matches as match}
+        <Match {match} colOffset={getMatchHour(match.date) >= colOffsetStart ? colOffset : 0} />
+      {/each}
+    </div>
+  {/each}
+</div>
 
 <style>
   .container {
@@ -176,29 +144,5 @@
     padding: 0.5em;
     display: flex;
     align-items: center;
-  }
-
-  .debug-controls {
-    display: none;
-  }
-  :global(body.debug) .debug-controls {
-    --debug-colour: lightcoral;
-
-    display: block;
-    position: fixed;
-    left: 22cm;
-
-    font-size: 1.5em;
-    background-color: color-mix(in srgb, var(--debug-colour), white 70%);
-    border: 2px dashed color-mix(in srgb, var(--debug-colour), black 10%);
-    padding: 1em;
-  }
-  .debug-controls strong {
-    display: block;
-  }
-  .debug-controls input {
-    font-size: inherit;
-    display: block;
-    width: 5em;
   }
 </style>
