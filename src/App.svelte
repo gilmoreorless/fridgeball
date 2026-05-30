@@ -17,7 +17,7 @@
     const matchDateTimes = new Set<string>();
     const matches: MatchData[] = rawData
       .split('\n')
-      .filter(line => line.length > 1)
+      .filter(line => line.length > 1 && !line.startsWith('Match'))
       .map(line => {
         const [
           matchNum,
