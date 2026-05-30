@@ -14,22 +14,14 @@
 
   interface Props {
     match: MatchData;
-    colOffset?: number;
+    column: number;
   }
 
-  let { match, colOffset = 0 }: Props = $props();
+  let { match, column }: Props = $props();
 
-  let col = $derived.by(() => {
-    const hour = match.date?.getHours() || 0;
-    let value = hour * 2 - colOffset;
-    if (match.date?.getMinutes()) {
-      value++;
-    }
-    // +1 to account for the first column being the date
-    // +1 to account for grid columns being 1-indexed
-    value += 2;
-    return value;
-  });
+  // +1 to account for the first column being the date
+  // +1 to account for CSS grid columns being 1-indexed
+  let col = $derived(column + 2);
 </script>
 
 {#snippet team(name: string)}

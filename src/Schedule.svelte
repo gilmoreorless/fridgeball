@@ -18,15 +18,13 @@
 
   // Calculate which local days and columns to show.
   // This needs to be reusable for the debug time zone switcher.
-  let { days, cols, colOffset, colOffsetStart } = $derived.by(() => {
+  let { days, cols, offsetMap } = $derived.by(() => {
     let days = [];
     let cols = 48; // Use half-hour blocks
-    let colOffset = 0;
-    let colOffsetStart = 0;
+    // Track which columns contain matches
+    let usedCols = Array.from({ length: cols }, () => false);
+
     let curDay = { hasDoubles: false, matches: <MatchData[]>[] };
-    let earliestMatch: [number, Date] = [cols, null];
-    let latestMatch: [number, Date] = [0, null];
-    let latestLocalHour = 0;
     for (let match of matches) {
       // Account for debug time zone offset
       match.date = new Date(match.baseDate);
@@ -42,58 +40,48 @@
       if (match.isDoubleTime) {
         curDay.hasDoubles = true;
       }
-      const matchHour = getMatchHour(match.date)
-      if (matchHour > latestLocalHour) {
-        latestLocalHour = matchHour;
-      }
-      const utcMatchHour = getMatchHour(match.date, true);
-      if (utcMatchHour > latestMatch[0]) {
-        latestMatch = [utcMatchHour, match.date];
-      }
-      if (utcMatchHour < earliestMatch[0]) {
-        earliestMatch = [utcMatchHour, match.date];
+      const matchHour = getMatchHour(match.date);
+
+      // Each match takes up a 2-hour block; mark 4 half-hour columns as being used
+      for (let i = 0; i < 4; i++) {
+        usedCols[matchHour + i] = true;
       }
     }
     days.push(curDay);
 
-    // Try to work out the earliest/latest start times to aid in removing unnecessary columns
-    // NOTE: This only works for the user's time zone, but breaks when using the debug UI
-    // TODO: Convert to Temporal?
-    const earliestMatchHour = getMatchHour(earliestMatch[1]);
-    const latestMatchHour = getMatchHour(latestMatch[1]);
-
-    const matchesSpanCols = latestMatchHour + 4 - earliestMatchHour;
-    const shouldShrinkMiddle = latestMatchHour < earliestMatchHour;
-    if (shouldShrinkMiddle) {
-      // Some matches are on a different day from Qatar, leaving a huge gap between certain matches.
-      // Work out where this large gap is and shrink it, while leaving 1-2 hour gaps alone.
-      const shrinkStart = latestMatchHour + 6;
-      const shrinkEnd = earliestMatchHour - 4;
-      colOffset = shrinkEnd - shrinkStart;
-      colOffsetStart = shrinkStart;
-      cols -= colOffset;
-      // Add an extra column to give space for matches starting at or after 10:30pm
-      if (latestLocalHour >= 45) {
-        cols += 2;
+    // Update column count in case extra columns were added at the end (e.g. matches after 10pm)
+    cols = usedCols.length;
+    const paddingStartEnd = 2;
+    const paddingMiddle = 6;
+    let i = 0;
+    let offsetMap: Array<{ index: number; offset: number }> = [{ index: 0, offset: 0 }];
+    let accOffset = 0;
+    // Collapse runs of false values by tracking offset markers
+    for (i = 0; i < usedCols.length; i++) {
+      if (usedCols[i]) {
+        continue;
       }
-      // ...and one more for the special case of a match starting at 11:30pm
-      if (latestLocalHour == 47) {
-        cols += 1;
+      let paddingValue = i === 0 ? paddingStartEnd : paddingMiddle;
+      // Increment a counter until we hit a used column
+      // used: [1, 0, 0, 0, 0, 1, 1]
+      //           i           j
+      let j = i;
+      while (++j < usedCols.length && !usedCols[j]);
+      if (j === usedCols.length) {
+        paddingValue = paddingStartEnd;
       }
-      console.log(shouldShrinkMiddle, { cols, colOffset, colOffsetStart, shrinkStart, shrinkEnd });
-    } else {
-      // All matches are on the same day as the host; remove columns before/after blocks of matches
-      // (but leave some padding in some cases?)
-      const startPadding = earliestMatchHour >= 1 ? 1 : 0;
-      colOffset = Math.max(earliestMatchHour - 2, 0) + startPadding;
-      const endPadding = latestMatchHour < 44 ? 1 : 0;
-      cols = startPadding + matchesSpanCols + endPadding;
-      console.log(shouldShrinkMiddle, {
-        earliestMatchHour, latestMatchHour, latestLocalHour, matchesSpanCols,
-        cols, colOffset, colOffsetStart, startPadding, endPadding,
-      });
+      let runLength = j - i;
+      if (runLength > paddingValue) {
+        let offset = runLength - paddingValue;
+        cols -= offset;
+        accOffset += offset;
+        offsetMap.push({ index: i, offset: accOffset });
+      }
+      i += runLength;
     }
-    return { days, cols, colOffset, colOffsetStart };
+
+    console.log({ usedCols, cols, offsetMap });
+    return { days, cols, offsetMap };
   });
 
   const dateFormatter = new Intl.DateTimeFormat('en', {
@@ -111,6 +99,12 @@
     }
     return parts.map(p => p.value).join('');
   }
+
+  function columnForMatch(match: MatchData) {
+    let col = getMatchHour(match.date);
+    let offset = offsetMap.findLast(({ index }) => col >= index);
+    return col - (offset?.offset ?? 0);
+  }
 </script>
 
 <div class="container" style="grid-template-columns: 5em repeat({cols}, 1fr);">
@@ -120,7 +114,7 @@
         {@html displayDate(day.matches[0].date)}
       </span>
       {#each day.matches as match}
-        <Match {match} colOffset={getMatchHour(match.date) >= colOffsetStart ? colOffset : 0} />
+        <Match {match} column={columnForMatch(match)} />
       {/each}
     </div>
   {/each}
