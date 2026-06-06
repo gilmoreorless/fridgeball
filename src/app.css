@@ -20,16 +20,6 @@ body {
   min-height: 100vh;
 }
 
-/* Add `debug` class to show red lines marking A4 portrait pages */
-body.debug {
-  outline: 1px solid red;
-  width: 21cm;
-  background-image: linear-gradient(to bottom, transparent 0 calc(100% - 1px), red 0 100%);
-  background-size: 100% 29.7cm;
-}
-
-#app {
-  margin: 0 auto;
-  padding: 2rem;
-  padding-top: 4rem;
+* {
+  box-sizing: border-box;
 }
