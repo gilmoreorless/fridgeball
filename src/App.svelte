@@ -4,10 +4,12 @@
   import type { MatchData } from './lib/Match.svelte';
   import Schedule from './Schedule.svelte';
 
-  let currentTournament = $state(Object.keys(tournaments)[0]);
+  type TournamentKey = keyof typeof tournaments;
+
+  let currentTournament = $state(Object.keys(tournaments)[0]) as TournamentKey;
   const tournamentMatchesCache = new Map<string, MatchData[]>();
 
-  async function loadData(key: string) {
+  async function loadData(key: TournamentKey) {
     if (tournamentMatchesCache.has(key)) {
       return tournamentMatchesCache.get(key)!;
     }
@@ -68,6 +70,7 @@
   </div>
 
   <svelte:boundary>
+    <h1 class="title">{tournaments[currentTournament]} schedule</h1>
     <Schedule matches={await matches} {debugZone} />
 
     {#snippet pending()}
@@ -77,6 +80,15 @@
 </main>
 
 <style>
+  .loading {
+    font-size: 2rem;
+    font-style: italic;
+  }
+
+  .title {
+    font-size: 1.8rem;
+  }
+
   .debug-controls {
     display: none;
   }
@@ -99,10 +111,5 @@
     font-size: inherit;
     display: block;
     width: 5em;
-  }
-
-  .loading {
-    font-size: 2rem;
-    font-style: italic;
   }
 </style>
