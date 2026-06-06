@@ -15,13 +15,19 @@
   interface Props {
     match: MatchData;
     column: number;
+    highlightTeam?: string;
   }
 
-  let { match, column }: Props = $props();
+  let { match, column, highlightTeam }: Props = $props();
 
   // +1 to account for the first column being the date
   // +1 to account for CSS grid columns being 1-indexed
   let col = $derived(column + 2);
+
+  let teamClass = $derived(
+    highlightTeam && (match.team1 === highlightTeam || match.team2 === highlightTeam)
+      ? 'highlight' : ''
+  );
 </script>
 
 {#snippet team(name: string)}
@@ -31,7 +37,7 @@
   {name}
 {/snippet}
 
-<div class="match" data-location={match.location} style="
+<div class="match {teamClass}" data-location={match.location} style="
   grid-column: {col} / {col + 4};
   grid-row: {match.isDoubleTime ? 2 : 1};
 ">
@@ -61,6 +67,9 @@
     background-color: hsl(210, 100%, 95%);
     font-size: 1em;
     padding: 0.2em 0.4em 0.3em 0.5em;
+  }
+  .match.highlight {
+    background-color: hsl(120, 80%, 95%);
   }
   /* 2023 WWC only: Colour based on host time zone */
   .match[data-location="NZL"] {

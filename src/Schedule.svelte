@@ -3,11 +3,16 @@
 
   interface Props {
     matches: MatchData[];
+    highlightTeam?: string;
     debugZone?: number;
   }
 
   const localOffset = new Date().getTimezoneOffset() / 60 * -1;
-  let { matches, debugZone = localOffset }: Props = $props();
+  let {
+    matches,
+    debugZone = localOffset,
+    highlightTeam,
+  }: Props = $props();
 
   // NOTE: "Hour" in names now indicates half-hour blocks, so 12:30 becomes "hour 25"
   function getMatchHour(date: Date, utc = false) {
@@ -80,7 +85,6 @@
       i += runLength;
     }
 
-    console.log({ usedCols, cols, offsetMap });
     return { days, cols, offsetMap };
   });
 
@@ -114,7 +118,7 @@
         {@html displayDate(day.matches[0].date)}
       </span>
       {#each day.matches as match}
-        <Match {match} column={columnForMatch(match)} />
+        <Match {match} column={columnForMatch(match)} {highlightTeam} />
       {/each}
     </div>
   {/each}

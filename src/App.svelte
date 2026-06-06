@@ -54,6 +54,23 @@
   let showDebug = $state(false);
   const localOffset = new Date().getTimezoneOffset() / 60 * -1;
   let debugZone = $state(localOffset);
+  let highlightTeam = $state('');
+  let availableTeams = $derived.by(async () => {
+    let teams = new Set();
+
+    const validTeam = /^[A-Z]{3}$/;
+    const addTeam = (team: string) => {
+      if (validTeam.test(team)) {
+        teams.add(team);
+      }
+    };
+    for (let match of await matches) {
+      addTeam(match.team1);
+      addTeam(match.team2);
+    }
+
+    return Array.from(teams).sort();
+  });
 </script>
 
 <main class="app {showDebug ? 'debug' : ''}">
@@ -64,7 +81,7 @@
 
   <svelte:boundary>
     <h1 class="title">{tournaments[currentTournament]} schedule</h1>
-    <Schedule matches={await matches} {debugZone} />
+    <Schedule matches={await matches} {highlightTeam} {debugZone} />
 
     {#snippet pending()}
       <p class="loading">Loading schedule&hellip;</p>
@@ -79,6 +96,16 @@
       <select id="debug-tournament" bind:value={currentTournament}>
         {#each Object.entries(tournaments) as tournament}
           <option value={tournament[0]}>{tournament[1]}</option>
+        {/each}
+      </select>
+    </div>
+
+    <div class="debug-option">
+      <label for="debug-team-highlight">Highlight team:</label>
+      <select id="debug-team-highlight" bind:value={highlightTeam}>
+        <option value="">(none)</option>
+        {#each await availableTeams as team}
+          <option value={team}>{team}</option>
         {/each}
       </select>
     </div>
