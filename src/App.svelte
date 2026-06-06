@@ -109,10 +109,20 @@
     float: right;
     margin-top: 2rem;
   }
+
+  /*** Print-only styles ***/
+
   @media print {
     .options {
       display: none;
     }
+  }
+
+  @page {
+    margin: 2rem 0;
+  }
+  @page :first {
+    margin-top: 0;
   }
 
   /*** Debug section: Add `debug` class to show red lines marking A4 portrait pages ***/

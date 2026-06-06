@@ -125,14 +125,20 @@
     border: 2px solid black;
     display: grid;
     column-gap: 1px;
+
+    box-decoration-break: clone;
   }
+
   .row {
     display: grid;
     grid-column: 1 / -1;
     grid-template-columns: subgrid;
     background-color: white;
     border: 1px solid black;
+
+    break-inside: avoid;
   }
+
   .date {
     outline: 1px solid black;
     background-color: hsl(30, 100%, 95%);
