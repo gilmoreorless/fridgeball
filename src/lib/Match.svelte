@@ -55,13 +55,14 @@
       "num time round"
       "num team1 team1"
       "num team2 team2";
-    grid-template-columns: 1em 1fr 1fr;
+    grid-template-columns: 0.8em 1fr 1fr;
 
     outline: 1px solid black;
     background-color: hsl(210, 100%, 95%);
     font-size: 1em;
-    padding: 0.2em 0.5em 0.3em;
+    padding: 0.2em 0.4em 0.3em 0.5em;
   }
+  /* 2023 WWC only: Colour based on host time zone */
   .match[data-location="NZL"] {
     background-color: hsl(0, 0%, 95%);
   }
@@ -74,6 +75,7 @@
   .match[data-location="AUC"] {
     background-color: hsl(210, 80%, 95%);
   }
+
   .num {
     grid-area: num;
     white-space: nowrap;
@@ -84,7 +86,7 @@
     display: block;
     position: absolute;
     top: 50%;
-    left: 20%;
+    left: 15%;
     transform: translate(-50%, -50%) rotate(-.25turn);
   }
   .time {
@@ -93,7 +95,8 @@
   .round {
     grid-area: round;
     text-align: right;
-    padding-left: 0.5em;
+    font-weight: bold;
+    padding-left: 0.2em;
   }
   .team {
     white-space: nowrap;
